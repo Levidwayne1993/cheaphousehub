@@ -1,0 +1,226 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Property, formatPrice, calcSavings } from '@/lib/types';
+
+const SAMPLE: Property = {
+  id: '1',
+  title: '3BR Ranch — Bank Foreclosure',
+  address: '1234 Oak Street',
+  city: 'Tampa',
+  state: 'FL',
+  zip: '33601',
+  price: 89000,
+  original_price: 185000,
+  bedrooms: 3,
+  bathrooms: 2,
+  sqft: 1450,
+  lot_size: '0.25 acres',
+  property_type: 'single-family',
+  listing_type: 'foreclosure',
+  description: 'Spacious 3-bedroom, 2-bathroom ranch home in an established Tampa neighborhood. This bank-foreclosed property offers excellent value at 52% below the original listing price.\n\nThe home features an open floor plan with a large living area, eat-in kitchen with ample cabinet space, and a primary bedroom suite with walk-in closet. The backyard is fully fenced with a covered patio — perfect for entertaining.\n\nProperty needs cosmetic updates including paint, flooring, and minor kitchen upgrades. Roof was replaced in 2021. HVAC system is in good working condition.\n\nIdeal for first-time homebuyers, investors, or flippers looking for strong ROI in a growing Florida market. Located near schools, shopping, and major highways.',
+  source: 'HUD HomeStore',
+  source_url: 'https://www.hudhomestore.gov',
+  image_urls: [],
+  lat: 27.9506,
+  lng: -82.4572,
+  savings_pct: 52,
+  scraped_at: '2026-04-16T12:00:00Z',
+  created_at: '2026-04-16T12:00:00Z',
+  updated_at: '2026-04-16T12:00:00Z',
+};
+
+const typeColors: Record<string, string> = {
+  foreclosure: 'bg-red-100 text-red-700',
+  auction: 'bg-amber-100 text-amber-700',
+  'tax-lien': 'bg-purple-100 text-purple-700',
+  'bank-owned': 'bg-blue-100 text-blue-700',
+  'short-sale': 'bg-teal-100 text-teal-700',
+  cheap: 'bg-green-100 text-green-700',
+};
+
+const typeLabels: Record<string, string> = {
+  foreclosure: 'Foreclosure', auction: 'Auction', 'tax-lien': 'Tax Lien',
+  'bank-owned': 'Bank Owned', 'short-sale': 'Short Sale', cheap: 'Budget Home',
+};
+
+export default function PropertyDetailPage({ params }: { params: { id: string } }) {
+  const [property, setProperty] = useState<Property>(SAMPLE);
+  const [activeImg, setActiveImg] = useState(0);
+  const [saved, setSaved] = useState(false);
+
+  // In production, fetch from API:
+  // useEffect(() => { fetch(`/api/listings/${params.id}`).then(r => r.json()).then(setProperty); }, [params.id]);
+
+  const savings = calcSavings(property.price, property.original_price);
+  const typeColor = typeColors[property.listing_type] || 'bg-gray-100 text-gray-700';
+  const typeLabel = typeLabels[property.listing_type] || property.listing_type;
+  const images = property.image_urls.length > 0 ? property.image_urls : [null];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Link href="/" className="hover:text-brand-500 transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/search" className="hover:text-brand-500 transition-colors">Search</Link>
+            <span>/</span>
+            <span className="text-gray-800 font-medium truncate">{property.title}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left column — images + description */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Image gallery */}
+            <div className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100">
+              <div className="relative h-72 md:h-96 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                {images[activeImg] ? (
+                  <img src={images[activeImg]!} alt={property.title} className="w-full h-full object-cover gallery-img" />
+                ) : (
+                  <div className="text-center">
+                    <svg className="w-20 h-20 text-gray-300 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <p className="text-gray-400 mt-2 text-sm">Property image coming soon</p>
+                  </div>
+                )}
+                {/* Nav arrows */}
+                {images.length > 1 && (
+                  <>
+                    <button onClick={() => setActiveImg((activeImg - 1 + images.length) % images.length)} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                      <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <button onClick={() => setActiveImg((activeImg + 1) % images.length)} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                      <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                  </>
+                )}
+                {/* Badges */}
+                <span className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-semibold ${typeColor}`}>{typeLabel}</span>
+                {savings && savings > 0 && (
+                  <div className="absolute top-4 right-4 savings-badge bg-emerald-500 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                    Save {savings}%
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Property Description</h2>
+              <div className="text-gray-600 leading-relaxed whitespace-pre-line">{property.description}</div>
+            </div>
+
+            {/* Source info */}
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-6">
+              <div className="flex items-start gap-3">
+                <svg className="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <h3 className="font-semibold text-blue-800 mb-1">Data Source</h3>
+                  <p className="text-blue-700 text-sm">This listing was sourced from <strong>{property.source}</strong> and last updated on {new Date(property.scraped_at).toLocaleDateString()}. Click the button above to view the original listing for the most current information.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right column — price card + details */}
+          <div className="space-y-6">
+            {/* Price card */}
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 sticky top-20">
+              <div className="mb-4">
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-3xl font-extrabold text-brand-700">{formatPrice(property.price)}</span>
+                </div>
+                {property.original_price && property.original_price > property.price && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 line-through text-lg">{formatPrice(property.original_price)}</span>
+                    <span className="text-emerald-600 font-bold text-sm">
+                      You save {formatPrice(property.original_price - property.price)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <h2 className="text-lg font-bold text-gray-800 mb-2">{property.title}</h2>
+              <p className="text-gray-500 mb-4 flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                {property.address}, {property.city}, {property.state} {property.zip}
+              </p>
+
+              {/* Specs grid */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {property.bedrooms !== null && (
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <div className="text-lg font-bold text-gray-800">{property.bedrooms}</div>
+                    <div className="text-xs text-gray-500">Bedrooms</div>
+                  </div>
+                )}
+                {property.bathrooms !== null && (
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <div className="text-lg font-bold text-gray-800">{property.bathrooms}</div>
+                    <div className="text-xs text-gray-500">Bathrooms</div>
+                  </div>
+                )}
+                {property.sqft && (
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <div className="text-lg font-bold text-gray-800">{property.sqft.toLocaleString()}</div>
+                    <div className="text-xs text-gray-500">Sq Ft</div>
+                  </div>
+                )}
+                {property.lot_size && (
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <div className="text-lg font-bold text-gray-800">{property.lot_size}</div>
+                    <div className="text-xs text-gray-500">Lot Size</div>
+                  </div>
+                )}
+              </div>
+
+              {/* CTA buttons */}
+              <div className="space-y-3">
+                <a
+                  href={property.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-lg font-semibold text-center block transition-colors shadow-md shadow-brand-500/20"
+                >
+                  View Original Listing
+                </a>
+                <button
+                  onClick={() => setSaved(!saved)}
+                  className={`w-full py-3 rounded-lg font-semibold text-center transition-colors border ${saved ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                >
+                  {saved ? '✓ Saved' : '♡ Save Property'}
+                </button>
+                <button
+                  onClick={() => { if (navigator.share) navigator.share({ title: property.title, url: window.location.href }); else navigator.clipboard.writeText(window.location.href); }}
+                  className="w-full py-3 rounded-lg font-semibold text-center transition-colors border bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Share Listing
+                </button>
+              </div>
+
+              {/* Property details */}
+              <div className="mt-6 pt-6 border-t border-gray-100">
+                <h3 className="font-semibold text-gray-800 mb-3">Property Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-500">Type</span><span className="text-gray-800 font-medium capitalize">{property.property_type}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Listing Type</span><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${typeColor}`}>{typeLabel}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Source</span><span className="text-gray-800 font-medium">{property.source}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Listed</span><span className="text-gray-800 font-medium">{new Date(property.created_at).toLocaleDateString()}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
