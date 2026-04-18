@@ -1,17 +1,11 @@
+// ============================================================
+// FILE: src/app/page.tsx
+// ============================================================
 'use client';
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { LISTING_TYPES, US_STATES, formatPrice } from '@/lib/types';
-
-const SAMPLE_LISTINGS = [
-  { id: '1', title: '3BR Ranch — Bank Foreclosure', city: 'Tampa', state: 'FL', price: 89000, original_price: 185000, bedrooms: 3, bathrooms: 2, sqft: 1450, listing_type: 'foreclosure', image_urls: [] },
-  { id: '2', title: '4BR Colonial — Tax Lien Sale', city: 'Columbus', state: 'OH', price: 42000, original_price: 120000, bedrooms: 4, bathrooms: 2, sqft: 1800, listing_type: 'tax-lien', image_urls: [] },
-  { id: '3', title: '2BR Bungalow — Auction Property', city: 'Atlanta', state: 'GA', price: 65000, original_price: 140000, bedrooms: 2, bathrooms: 1, sqft: 1100, listing_type: 'auction', image_urls: [] },
-  { id: '4', title: '3BR Split-Level — Bank Owned', city: 'Phoenix', state: 'AZ', price: 115000, original_price: 210000, bedrooms: 3, bathrooms: 2.5, sqft: 1650, listing_type: 'bank-owned', image_urls: [] },
-  { id: '5', title: '5BR Victorian — Short Sale', city: 'Detroit', state: 'MI', price: 38000, original_price: 95000, bedrooms: 5, bathrooms: 3, sqft: 2400, listing_type: 'short-sale', image_urls: [] },
-  { id: '6', title: '2BR Cottage — Budget Home', city: 'Memphis', state: 'TN', price: 55000, original_price: 110000, bedrooms: 2, bathrooms: 1, sqft: 950, listing_type: 'cheap', image_urls: [] },
-];
+import { Property, LISTING_TYPES, US_STATES, formatPrice } from '@/lib/types';
 
 const typeColors: Record<string, string> = {
   foreclosure: 'bg-red-100 text-red-700',
@@ -23,28 +17,75 @@ const typeColors: Record<string, string> = {
 };
 
 const typeLabels: Record<string, string> = {
-  foreclosure: 'Foreclosure', auction: 'Auction', 'tax-lien': 'Tax Lien',
-  'bank-owned': 'Bank Owned', 'short-sale': 'Short Sale', cheap: 'Budget Home',
+  foreclosure: 'Foreclosure',
+  auction: 'Auction',
+  'tax-lien': 'Tax Lien',
+  'bank-owned': 'Bank Owned',
+  'short-sale': 'Short Sale',
+  cheap: 'Budget Home',
 };
 
 function AnimatedCounter({ target, prefix = '', suffix = '' }: { target: number; prefix?: string; suffix?: string }) {
   const [count, setCount] = useState(0);
+
   useEffect(() => {
+    if (target === 0) { setCount(0); return; }
     let start = 0;
     const duration = 2000;
     const step = target / (duration / 16);
     const timer = setInterval(() => {
       start += step;
-      if (start >= target) { setCount(target); clearInterval(timer); }
-      else setCount(Math.floor(start));
+      if (start >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else setCount(Math.floor(start));
     }, 16);
     return () => clearInterval(timer);
   }, [target]);
+
   return <span>{prefix}{count.toLocaleString()}{suffix}</span>;
 }
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [featuredListings, setFeaturedListings] = useState<Property[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [stats, setStats] = useState({
+    total_listings: 0,
+    states_covered: 0,
+    avg_savings: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  // Fetch live stats from API
+  useEffect(() => {
+    fetch('/api/stats')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) {
+          setStats({
+            total_listings: data.total_listings || 0,
+            states_covered: data.states_covered || 0,
+            avg_savings: data.avg_savings || 0,
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingStats(false));
+  }, []);
+
+  // Fetch featured listings (biggest savings) from API
+  useEffect(() => {
+    fetch('/api/listings?sort=savings&limit=6')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.properties && data.properties.length > 0) {
+          setFeaturedListings(data.properties);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingFeatured(false));
+  }, []);
 
   return (
     <div>
@@ -69,8 +110,8 @@ export default function HomePage() {
             </h1>
 
             <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Foreclosures, auctions, tax liens &amp; bank-owned properties — all in one place.
-              Save up to <span className="text-emerald-300 font-bold">60% below market value</span>.
+              Foreclosures, auctions, tax liens &amp; bank-owned properties — all in one place. Save up to
+              <span className="text-emerald-300 font-bold"> 60% below market value</span>.
             </p>
 
             {/* Search bar */}
@@ -85,7 +126,9 @@ export default function HomePage() {
                     placeholder="Search by city, state, or ZIP code..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') window.location.href = `/search?q=${searchQuery}`; }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') window.location.href = `/search?q=${searchQuery}`;
+                    }}
                     className="w-full py-4 text-gray-800 placeholder-gray-400 focus:outline-none text-base"
                   />
                 </div>
@@ -106,14 +149,18 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { label: 'Active Listings', value: 12450, prefix: '' },
-              { label: 'States Covered', value: 50, prefix: '' },
-              { label: 'Avg. Savings', value: 38, suffix: '%' },
+              { label: 'Active Listings', value: stats.total_listings, prefix: '' },
+              { label: 'States Covered', value: stats.states_covered, prefix: '' },
+              { label: 'Avg. Savings', value: stats.avg_savings, suffix: '%' },
               { label: 'Updated Daily', value: 4, suffix: 'x' },
             ].map((stat, i) => (
               <div key={i} className="stat-card text-center" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="text-2xl md:text-3xl font-extrabold text-brand-700">
-                  <AnimatedCounter target={stat.value} prefix={stat.prefix} suffix={stat.suffix} />
+                  {loadingStats ? (
+                    <span className="inline-block w-16 h-8 skeleton rounded" />
+                  ) : (
+                    <AnimatedCounter target={stat.value} prefix={stat.prefix} suffix={stat.suffix} />
+                  )}
                 </div>
                 <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
               </div>
@@ -168,43 +215,76 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SAMPLE_LISTINGS.map((p) => {
-              const savings = p.original_price ? Math.round(((p.original_price - p.price) / p.original_price) * 100) : 0;
-              return (
-                <Link key={p.id} href={`/search`}>
-                  <div className="property-card bg-white rounded-xl overflow-hidden shadow-md border border-gray-100 cursor-pointer">
-                    <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <svg className="w-16 h-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                      </svg>
-                      <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold ${typeColors[p.listing_type]}`}>
-                        {typeLabels[p.listing_type]}
-                      </span>
-                      {savings > 0 && (
-                        <div className="absolute top-3 right-3 savings-badge bg-emerald-500 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-lg">
-                          Save {savings}%
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="text-2xl font-bold text-brand-700">{formatPrice(p.price)}</span>
-                        {p.original_price && <span className="text-sm text-gray-400 line-through">{formatPrice(p.original_price)}</span>}
-                      </div>
-                      <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
-                        <span><span className="font-medium text-gray-700">{p.bedrooms}</span> bed</span>
-                        <span><span className="font-medium text-gray-700">{p.bathrooms}</span> bath</span>
-                        <span><span className="font-medium text-gray-700">{p.sqft?.toLocaleString()}</span> sqft</span>
-                      </div>
-                      <h3 className="font-semibold text-gray-800 text-sm mb-1">{p.title}</h3>
-                      <p className="text-gray-500 text-sm">{p.city}, {p.state}</p>
-                    </div>
+          {loadingFeatured ? (
+            /* Loading skeletons */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100">
+                  <div className="h-48 skeleton" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-6 w-24 skeleton rounded" />
+                    <div className="h-4 w-full skeleton rounded" />
+                    <div className="h-4 w-3/4 skeleton rounded" />
                   </div>
-                </Link>
-              );
-            })}
-          </div>
+                </div>
+              ))}
+            </div>
+          ) : featuredListings.length > 0 ? (
+            /* Live listings */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredListings.map((p) => {
+                const savings = p.original_price ? Math.round(((p.original_price - p.price) / p.original_price) * 100) : 0;
+                const imgSrc = p.image_urls?.[0] || null;
+                return (
+                  <Link key={p.id} href={`/property/${p.id}`}>
+                    <div className="property-card bg-white rounded-xl overflow-hidden shadow-md border border-gray-100 cursor-pointer">
+                      <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        {imgSrc ? (
+                          <img src={imgSrc} alt={p.title} className="w-full h-full object-cover" loading="lazy" />
+                        ) : (
+                          <svg className="w-16 h-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                          </svg>
+                        )}
+                        <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold ${typeColors[p.listing_type] || 'bg-gray-100 text-gray-700'}`}>
+                          {typeLabels[p.listing_type] || p.listing_type}
+                        </span>
+                        {savings > 0 && (
+                          <div className="absolute top-3 right-3 savings-badge bg-emerald-500 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-lg">
+                            Save {savings}%
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <div className="flex items-baseline gap-2 mb-1">
+                          <span className="text-2xl font-bold text-brand-700">{formatPrice(p.price)}</span>
+                          {p.original_price && <span className="text-sm text-gray-400 line-through">{formatPrice(p.original_price)}</span>}
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
+                          {p.bedrooms !== null && <span><span className="font-medium text-gray-700">{p.bedrooms}</span> bed</span>}
+                          {p.bathrooms !== null && <span><span className="font-medium text-gray-700">{p.bathrooms}</span> bath</span>}
+                          {p.sqft && <span><span className="font-medium text-gray-700">{p.sqft?.toLocaleString()}</span> sqft</span>}
+                        </div>
+                        <h3 className="font-semibold text-gray-800 text-sm mb-1">{p.title}</h3>
+                        <p className="text-gray-500 text-sm">{p.city}, {p.state}</p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            /* Empty state — no listings yet */
+            <div className="text-center py-16">
+              <svg className="w-20 h-20 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">Listings Coming Soon</h3>
+              <p className="text-gray-400 max-w-md mx-auto">
+                Our aggregator is actively collecting affordable homes from across the country. Check back shortly for live deals!
+              </p>
+            </div>
+          )}
 
           <div className="text-center mt-8 sm:hidden">
             <Link href="/search" className="text-brand-500 font-semibold">View All Listings &rarr;</Link>

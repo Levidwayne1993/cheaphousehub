@@ -1,3 +1,6 @@
+// ============================================================
+// FILE: src/app/api/stats/route.ts
+// ============================================================
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
@@ -14,7 +17,20 @@ export async function GET() {
     const { data: stateData } = await supabase
       .from('properties')
       .select('state');
+
     const uniqueStates = new Set((stateData || []).map((p: any) => p.state));
+
+    const { data: savingsData } = await supabase
+      .from('properties')
+      .select('savings_pct')
+      .not('savings_pct', 'is', null)
+      .gt('savings_pct', 0);
+
+    let avgSavings = 0;
+    if (savingsData && savingsData.length > 0) {
+      const sum = savingsData.reduce((acc: number, p: any) => acc + (p.savings_pct || 0), 0);
+      avgSavings = Math.round(sum / savingsData.length);
+    }
 
     const { count: foreclosures } = await supabase
       .from('properties')
@@ -39,6 +55,7 @@ export async function GET() {
     return NextResponse.json({
       total_listings: total || 0,
       states_covered: uniqueStates.size,
+      avg_savings: avgSavings,
       foreclosures: foreclosures || 0,
       auctions: auctions || 0,
       tax_liens: taxLiens || 0,
