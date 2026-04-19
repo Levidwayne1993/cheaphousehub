@@ -18,26 +18,31 @@ function SearchContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Filter state
   const [stateFilter, setStateFilter] = useState(searchParams.get('state') || '');
   const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || '');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [bedrooms, setBedrooms] = useState('');
   const [sortBy, setSortBy] = useState('newest');
-  const [searchQuery] = useState(searchParams.get('q') || '');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+
+  // Available filter options from API
+  const [availableStates, setAvailableStates] = useState<string[]>([]);
+  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
 
   // Build the API URL from current filters
   const buildApiUrl = useCallback((page: number = 1) => {
     const params = new URLSearchParams();
+    if (searchQuery) params.set('query', searchQuery);
     if (stateFilter) params.set('state', stateFilter);
-    if (typeFilter) params.set('type', typeFilter);
+    if (typeFilter) params.set('listing_type', typeFilter);
     if (minPrice) params.set('min_price', minPrice);
     if (maxPrice) params.set('max_price', maxPrice);
-    if (bedrooms) params.set('bedrooms', bedrooms);
-    if (sortBy) params.set('sort', sortBy);
-    if (searchQuery) params.set('q', searchQuery);
+    if (bedrooms) params.set('min_beds', bedrooms);
+    if (sortBy) params.set('sort_by', sortBy);
     params.set('page', String(page));
-    params.set('limit', '24');
+    params.set('per_page', '24');
     return `/api/listings?${params.toString()}`;
   }, [stateFilter, typeFilter, minPrice, maxPrice, bedrooms, sortBy, searchQuery]);
 
@@ -57,6 +62,11 @@ function SearchContent() {
           setTotalResults(0);
           setTotalPages(1);
         }
+        // Load available filter options
+        if (data.filters) {
+          setAvailableStates(data.filters.states || []);
+          setAvailableTypes(data.filters.listing_types || []);
+        }
       })
       .catch(() => {
         setProperties([]);
@@ -65,31 +75,20 @@ function SearchContent() {
       .finally(() => setLoading(false));
   }, [buildApiUrl]);
 
-  // Fetch on mount and when URL search params change
+  // Sync URL search params on mount
   useEffect(() => {
     const state = searchParams.get('state');
     const type = searchParams.get('type');
+    const q = searchParams.get('q');
     if (state) setStateFilter(state);
     if (type) setTypeFilter(type);
+    if (q) setSearchQuery(q);
   }, [searchParams]);
 
   // Fetch whenever filters or sort change
   useEffect(() => {
     fetchListings(1);
-  }, [stateFilter, typeFilter, minPrice, maxPrice, bedrooms, sortBy, fetchListings]);
-
-  const handleApply = () => {
-    fetchListings(1);
-  };
-
-  const handleReset = () => {
-    setStateFilter('');
-    setTypeFilter('');
-    setMinPrice('');
-    setMaxPrice('');
-    setBedrooms('');
-    setSortBy('newest');
-  };
+  }, [stateFilter, typeFilter, minPrice, maxPrice, bedrooms, sortBy, searchQuery, fetchListings]);
 
   const handlePageChange = (page: number) => {
     fetchListings(page);
@@ -115,18 +114,17 @@ function SearchContent() {
           {/* Sidebar Filters */}
           <div className="lg:w-72 flex-shrink-0">
             <SearchFilters
-              state={stateFilter}
-              listingType={typeFilter}
-              minPrice={minPrice}
-              maxPrice={maxPrice}
-              bedrooms={bedrooms}
-              onStateChange={setStateFilter}
-              onTypeChange={setTypeFilter}
-              onMinPriceChange={setMinPrice}
-              onMaxPriceChange={setMaxPrice}
-              onBedroomsChange={setBedrooms}
-              onApply={handleApply}
-              onReset={handleReset}
+              states={availableStates}
+              listingTypes={availableTypes}
+              onFilter={(filters) => {
+                setSearchQuery(filters.query);
+                setStateFilter(filters.state);
+                setTypeFilter(filters.listing_type);
+                setMinPrice(filters.min_price);
+                setMaxPrice(filters.max_price);
+                setBedrooms(filters.min_beds);
+                setSortBy(filters.sort_by);
+              }}
             />
           </div>
 
@@ -143,8 +141,8 @@ function SearchContent() {
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none"
               >
                 <option value="newest">Newest First</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
+                <option value="price_low">Price: Low to High</option>
+                <option value="price_high">Price: High to Low</option>
                 <option value="savings">Biggest Savings</option>
               </select>
             </div>
