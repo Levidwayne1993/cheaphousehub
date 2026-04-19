@@ -267,7 +267,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
               {/* CTA buttons */}
               <div className="space-y-3">
                 <a
-                  href={property.source_url}
+                  href={property.source_url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-lg font-semibold text-center block transition-colors shadow-md shadow-brand-500/20"
@@ -282,7 +282,8 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                 </button>
                 <button
                   onClick={() => {
-                    if (navigator.share) navigator.share({ title: property.title, url: window.location.href });
+                    if (navigator.share) navigator.share({ title: property.title || '', url: window.location.href }
+);
                     else navigator.clipboard.writeText(window.location.href);
                   }}
                   className="w-full py-3 rounded-lg font-semibold text-center transition-colors border bg-white border-gray-300 text-gray-700 hover:bg-gray-50"

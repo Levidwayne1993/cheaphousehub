@@ -89,7 +89,7 @@ export async function GET(request: Request) {
       .select('state')
       .not('state', 'is', null);
 
-    const uniqueStates = [...new Set(stateList?.map(s => s.state).filter(Boolean))].sort();
+    const uniqueStates = Array.from(new Set(stateList?.map(s => s.state).filter(Boolean))).sort();
 
     // Get unique listing types for filter dropdown
     const { data: typeList } = await supabase
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
       .select('listing_type')
       .not('listing_type', 'is', null);
 
-    const uniqueTypes = [...new Set(typeList?.map(t => t.listing_type).filter(Boolean))].sort();
+    const uniqueTypes = Array.from(new Set(typeList?.map(t => t.listing_type).filter(Boolean))).sort();
 
     // Return BOTH "listings" and "properties" so both page.tsx and listings/page.tsx work
     return NextResponse.json({

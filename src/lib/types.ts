@@ -181,3 +181,7 @@ export function formatPrice(price: number | null | undefined): string {
   if (price >= 1000) return `$${(price / 1000).toFixed(0)}k`;
   return `$${price.toLocaleString()}`;
 }
+export function calcSavings(price: number, originalPrice: number | null | undefined): number {
+  if (!originalPrice || originalPrice <= price) return 0;
+  return Math.round(((originalPrice - price) / originalPrice) * 100);
+}

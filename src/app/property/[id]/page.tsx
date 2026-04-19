@@ -143,7 +143,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
             <div className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100">
               <div className="relative h-72 md:h-96 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                 {images[activeImg] ? (
-                  <img src={images[activeImg]!} alt={property.title} className="w-full h-full object-cover gallery-img" />
+                  <img src={images[activeImg]!} alt={property.title || ''} className="w-full h-full object-cover gallery-img" />
                 ) : (
                   <div className="text-center">
                     <svg className="w-20 h-20 text-gray-300 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -267,7 +267,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
               {/* CTA buttons */}
               <div className="space-y-3">
                 <a
-                  href={property.source_url}
+                  href={property.source_url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-lg font-semibold text-center block transition-colors shadow-md shadow-brand-500/20"
@@ -282,7 +282,8 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                 </button>
                 <button
                   onClick={() => {
-                    if (navigator.share) navigator.share({ title: property.title, url: window.location.href });
+                    if (navigator.share) navigator.share({ title: property.title || '', url: window.location.href }
+);
                     else navigator.clipboard.writeText(window.location.href);
                   }}
                   className="w-full py-3 rounded-lg font-semibold text-center transition-colors border bg-white border-gray-300 text-gray-700 hover:bg-gray-50"

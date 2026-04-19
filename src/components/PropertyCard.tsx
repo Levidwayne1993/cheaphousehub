@@ -24,7 +24,7 @@ function getTypeColor(type: string): string {
   return colors[type] || 'bg-gray-100 text-gray-800';
 }
 
-export default function PropertyCard({ property }: { property: Property }) {
+export function PropertyCard({ property }: { property: Property }) {
   const {
     address,
     city,
@@ -160,3 +160,4 @@ export default function PropertyCard({ property }: { property: Property }) {
     </div>
   );
 }
+export default PropertyCard;
