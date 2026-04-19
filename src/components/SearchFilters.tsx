@@ -17,7 +17,8 @@ interface FilterProps {
   }) => void;
 }
 
-export default function SearchFilters({ states, listingTypes, onFilter }: FilterProps) {
+// Named export so search/page.tsx can do { SearchFilters }
+export function SearchFilters({ states, listingTypes, onFilter }: FilterProps) {
   const [query, setQuery] = useState('');
   const [state, setState] = useState('');
   const [listingType, setListingType] = useState('');
@@ -98,44 +99,53 @@ export default function SearchFilters({ states, listingTypes, onFilter }: Filter
         </button>
       </div>
 
-      {/* Toggle advanced */}
-      <button
-        type="button"
-        onClick={() => setShowAdvanced(!showAdvanced)}
-        className="text-sm text-blue-600 hover:text-blue-800 mb-4"
-      >
-        {showAdvanced ? '▲ Hide filters' : '▼ More filters'}
-      </button>
+      {/* Toggle advanced filters */}
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+        >
+          {showAdvanced ? 'Hide Filters' : 'More Filters'}
+        </button>
+        <button
+          type="button"
+          onClick={handleReset}
+          className="text-sm text-gray-500 hover:text-gray-700"
+        >
+          Reset All
+        </button>
+      </div>
 
       {/* Advanced filters */}
       {showAdvanced && (
-        <div className="flex flex-col md:flex-row gap-4 pt-4 border-t border-gray-100">
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 whitespace-nowrap">Min Price:</label>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-200">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Min Price</label>
             <input
               type="number"
               placeholder="$0"
               value={minPrice}
               onChange={(e) => setMinPrice(e.target.value)}
-              className="w-28 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 whitespace-nowrap">Max Price:</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Max Price</label>
             <input
               type="number"
-              placeholder="$500k"
+              placeholder="No max"
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-28 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 whitespace-nowrap">Min Beds:</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Min Beds</label>
             <select
               value={minBeds}
               onChange={(e) => setMinBeds(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
             >
               <option value="">Any</option>
               <option value="1">1+</option>
@@ -145,12 +155,12 @@ export default function SearchFilters({ states, listingTypes, onFilter }: Filter
               <option value="5">5+</option>
             </select>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 whitespace-nowrap">Sort:</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
             >
               <option value="newest">Newest First</option>
               <option value="price_low">Price: Low to High</option>
@@ -158,15 +168,11 @@ export default function SearchFilters({ states, listingTypes, onFilter }: Filter
               <option value="savings">Best Savings</option>
             </select>
           </div>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Reset All
-          </button>
         </div>
       )}
     </form>
   );
 }
+
+// Default export so listings/page.tsx can do: import SearchFilters from '...'
+export default SearchFilters;
