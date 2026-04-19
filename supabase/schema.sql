@@ -129,20 +129,3 @@ CREATE POLICY "Service role full access push_log"
   USING (auth.role() = 'service_role');
 
 
--- ========================
---  7. SAMPLE DATA
--- ========================
-INSERT INTO properties (title, address, city, state, zip, price, original_price, bedrooms, bathrooms, sqft, lot_size, property_type, listing_type, description, source, source_url, savings_pct) VALUES
-('3BR Ranch — Bank Foreclosure', '1234 Oak Street', 'Tampa', 'FL', '33601', 89000, 185000, 3, 2, 1450, '0.25 acres', 'single-family', 'foreclosure', 'Spacious 3-bedroom ranch in established neighborhood. Needs cosmetic updates. Great investment opportunity with strong rental potential in growing Tampa market.', 'HUD HomeStore', 'https://sample.cheaphousehub.com/1', 52),
-
-('4BR Colonial — Tax Lien Sale', '567 Maple Avenue', 'Columbus', 'OH', '43201', 42000, 120000, 4, 2, 1800, '0.3 acres', 'single-family', 'tax-lien', 'Large colonial home with 4 bedrooms and original hardwood floors. Tax lien property with clear title potential. Located in a revitalizing neighborhood near downtown.', 'County Records', 'https://sample.cheaphousehub.com/2', 65),
-
-('2BR Bungalow — Auction Property', '890 Peach Road', 'Atlanta', 'GA', '30301', 65000, 140000, 2, 1, 1100, '0.15 acres', 'single-family', 'auction', 'Charming bungalow in up-and-coming East Atlanta. Auction property with strong rental potential. Walking distance to shops and restaurants.', 'Auction.com', 'https://sample.cheaphousehub.com/3', 54),
-
-('3BR Split-Level — Bank Owned', '321 Desert Drive', 'Phoenix', 'AZ', '85001', 115000, 210000, 3, 2.5, 1650, '0.2 acres', 'single-family', 'bank-owned', 'REO property in great school district. Move-in ready with updated kitchen and new HVAC system. Pool in backyard. Motivated bank seller.', 'Bank REO', 'https://sample.cheaphousehub.com/4', 45),
-
-('5BR Victorian — Short Sale', '456 Woodward Avenue', 'Detroit', 'MI', '48201', 38000, 95000, 5, 3, 2400, '0.35 acres', 'single-family', 'short-sale', 'Historic Victorian with original woodwork, stained glass windows, and wrap-around porch. Incredible value in revitalizing Midtown neighborhood.', 'MLS', 'https://sample.cheaphousehub.com/5', 60),
-
-('2BR Cottage — Budget Home', '789 Beale Street', 'Memphis', 'TN', '38101', 55000, 110000, 2, 1, 950, '0.12 acres', 'single-family', 'cheap', 'Affordable cottage near downtown Memphis. Perfect starter home or rental property. Recently updated electrical and plumbing.', 'Listing Service', 'https://sample.cheaphousehub.com/6', 50)
-
-ON CONFLICT (source_url) DO NOTHING;
