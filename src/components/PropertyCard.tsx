@@ -31,26 +31,29 @@ export default function PropertyCard({ property }: { property: Property }) {
     state,
     zip,
     price,
-    beds,
-    baths,
+    bedrooms,
+    bathrooms,
     sqft,
     listing_type,
     source,
-    url,
-    image_url,
+    source_url,
+    image_urls,
     savings_pct,
+    original_price,
     days_on_market,
     estimated_value,
     foreclosure_status,
   } = property;
 
+  const firstImage = image_urls && image_urls.length > 0 ? image_urls[0] : null;
+
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100">
       {/* Image */}
       <div className="relative h-48 bg-gray-200">
-        {image_url ? (
+        {firstImage ? (
           <img
-            src={image_url}
+            src={firstImage}
             alt={address}
             className="w-full h-full object-cover"
             onError={(e) => {
@@ -72,7 +75,7 @@ export default function PropertyCard({ property }: { property: Property }) {
         </span>
 
         {/* Savings badge */}
-        {savings_pct && savings_pct > 0 && (
+        {savings_pct != null && savings_pct > 0 && (
           <span className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-bold bg-green-500 text-white">
             {savings_pct}% OFF
           </span>
@@ -86,7 +89,12 @@ export default function PropertyCard({ property }: { property: Property }) {
           <h3 className="text-2xl font-bold text-gray-900">
             ${price?.toLocaleString() || 'N/A'}
           </h3>
-          {estimated_value && estimated_value > price && (
+          {original_price != null && original_price > price && (
+            <span className="text-sm text-gray-400 line-through">
+              ${original_price.toLocaleString()}
+            </span>
+          )}
+          {estimated_value != null && estimated_value > price && original_price == null && (
             <span className="text-sm text-gray-400 line-through">
               ${estimated_value.toLocaleString()}
             </span>
@@ -99,20 +107,20 @@ export default function PropertyCard({ property }: { property: Property }) {
 
         {/* Details row */}
         <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-          {beds != null && (
+          {bedrooms != null && (
             <span className="flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v11a1 1 0 001 1h16a1 1 0 001-1V7" />
               </svg>
-              {beds} bd
+              {bedrooms} bd
             </span>
           )}
-          {baths != null && (
+          {bathrooms != null && (
             <span className="flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
               </svg>
-              {baths} ba
+              {bathrooms} ba
             </span>
           )}
           {sqft != null && (
@@ -137,14 +145,14 @@ export default function PropertyCard({ property }: { property: Property }) {
         {/* Source + Link */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <span className="text-xs text-gray-400">via {source}</span>
-          {url && (
+          {source_url && (
             <a
-              href={url}
+              href={source_url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
             >
-              View Listing →
+              View Listing &rarr;
             </a>
           )}
         </div>

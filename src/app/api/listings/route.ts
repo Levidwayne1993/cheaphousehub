@@ -12,13 +12,15 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query') || '';
     const state = searchParams.get('state') || '';
-    const listing_type = searchParams.get('listing_type') || '';
+    const listing_type = searchParams.get('listing_type') || searchParams.get('type') || '';
     const min_price = searchParams.get('min_price') || '';
     const max_price = searchParams.get('max_price') || '';
     const min_beds = searchParams.get('min_beds') || '';
-    const sort_by = searchParams.get('sort_by') || 'newest';
+    // Accept both "sort" (from page.tsx) and "sort_by" (from SearchFilters)
+    const sort_by = searchParams.get('sort_by') || searchParams.get('sort') || 'newest';
     const page = parseInt(searchParams.get('page') || '1');
-    const per_page = parseInt(searchParams.get('per_page') || '24');
+    // Accept both "limit" (from page.tsx) and "per_page" (from listings page)
+    const per_page = parseInt(searchParams.get('per_page') || searchParams.get('limit') || '24');
 
     let dbQuery = supabase
       .from('properties')
@@ -45,7 +47,8 @@ export async function GET(request: Request) {
       dbQuery = dbQuery.lte('price', parseInt(max_price));
     }
     if (min_beds) {
-      dbQuery = dbQuery.gte('beds', parseInt(min_beds));
+      // DB column is "bedrooms", not "beds"
+      dbQuery = dbQuery.gte('bedrooms', parseInt(min_beds));
     }
 
     // Sorting
@@ -96,7 +99,9 @@ export async function GET(request: Request) {
 
     const uniqueTypes = [...new Set(typeList?.map(t => t.listing_type).filter(Boolean))].sort();
 
+    // Return BOTH "listings" and "properties" so both page.tsx and listings/page.tsx work
     return NextResponse.json({
+      properties: data || [],
       listings: data || [],
       total: count || 0,
       page,

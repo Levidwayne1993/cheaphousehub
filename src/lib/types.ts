@@ -1,25 +1,44 @@
-// src/lib/types.ts — Consolidated types for CheapHouseHub
+// src/lib/types.ts — Consolidated types matching ACTUAL Supabase schema
 
 export interface Property {
   id: string;
+  title: string | null;
   address: string;
   city: string;
   state: string;
   zip: string;
   price: number;
-  beds: number | null;
-  baths: number | null;
+  original_price: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
   sqft: number | null;
+  lot_size: string | null;
+  property_type: string | null;
   listing_type: string;
-  source: string;
-  url: string;
-  image_url: string | null;
   description: string | null;
-  savings_pct: number | null;
+  source: string;
+  source_url: string | null;
+  image_urls: string[];
   lat: number | null;
   lng: number | null;
+  savings_pct: number | null;
+  scraped_at: string;
   created_at: string;
   updated_at: string;
+  imported_at: string | null;
+  is_active: boolean;
+  external_id: string | null;
+  pushed: boolean;
+  pushed_at: string | null;
+  county: string | null;
+  starting_bid: number | null;
+  assessed_value: number | null;
+  year_built: number | null;
+  listing_category: string | null;
+  auction_date: string | null;
+  case_number: string | null;
+  parcel_id: string | null;
+  property_status: string | null;
 
   // Pillar 1: Enhanced Property Data
   days_on_market: number | null;
@@ -76,6 +95,7 @@ export interface StatsData {
   total_listings: number;
   avg_price: number;
   states_covered: number;
+  avg_savings: number;
   listing_types: { type: string; count: number }[];
   recent_listings: Property[];
 }
@@ -88,4 +108,76 @@ export interface SearchFilters {
   max_price: string;
   min_beds: string;
   sort_by: string;
+}
+
+// ─── LISTING_TYPES used by page.tsx Browse by Category ───
+export const LISTING_TYPES = [
+  { value: 'foreclosure', label: 'Foreclosure', icon: '\uD83C\uDFDA\uFE0F' },
+  { value: 'auction', label: 'Auction', icon: '\uD83D\uDD28' },
+  { value: 'tax-lien', label: 'Tax Lien', icon: '\uD83D\uDCCB' },
+  { value: 'bank-owned', label: 'Bank Owned', icon: '\uD83C\uDFE6' },
+  { value: 'short-sale', label: 'Short Sale', icon: '\uD83D\uDCC9' },
+  { value: 'cheap', label: 'Budget Home', icon: '\uD83C\uDFE1' },
+];
+
+// ─── US_STATES used by page.tsx Browse by State ───
+export const US_STATES: Record<string, string> = {
+  AL: 'Alabama',
+  AK: 'Alaska',
+  AZ: 'Arizona',
+  AR: 'Arkansas',
+  CA: 'California',
+  CO: 'Colorado',
+  CT: 'Connecticut',
+  DE: 'Delaware',
+  FL: 'Florida',
+  GA: 'Georgia',
+  HI: 'Hawaii',
+  ID: 'Idaho',
+  IL: 'Illinois',
+  IN: 'Indiana',
+  IA: 'Iowa',
+  KS: 'Kansas',
+  KY: 'Kentucky',
+  LA: 'Louisiana',
+  ME: 'Maine',
+  MD: 'Maryland',
+  MA: 'Massachusetts',
+  MI: 'Michigan',
+  MN: 'Minnesota',
+  MS: 'Mississippi',
+  MO: 'Missouri',
+  MT: 'Montana',
+  NE: 'Nebraska',
+  NV: 'Nevada',
+  NH: 'New Hampshire',
+  NJ: 'New Jersey',
+  NM: 'New Mexico',
+  NY: 'New York',
+  NC: 'North Carolina',
+  ND: 'North Dakota',
+  OH: 'Ohio',
+  OK: 'Oklahoma',
+  OR: 'Oregon',
+  PA: 'Pennsylvania',
+  RI: 'Rhode Island',
+  SC: 'South Carolina',
+  SD: 'South Dakota',
+  TN: 'Tennessee',
+  TX: 'Texas',
+  UT: 'Utah',
+  VT: 'Vermont',
+  VA: 'Virginia',
+  WA: 'Washington',
+  WV: 'West Virginia',
+  WI: 'Wisconsin',
+  WY: 'Wyoming',
+};
+
+// ─── formatPrice used by page.tsx Featured Deals ───
+export function formatPrice(price: number | null | undefined): string {
+  if (price == null) return 'N/A';
+  if (price >= 1000000) return `$${(price / 1000000).toFixed(1)}M`;
+  if (price >= 1000) return `$${(price / 1000).toFixed(0)}k`;
+  return `$${price.toLocaleString()}`;
 }
